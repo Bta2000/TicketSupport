@@ -2,10 +2,11 @@ package com.codewithBita.ticketsupport.service;
 
 import com.codewithBita.ticketsupport.entity.TicketSupportEntity;
 import com.codewithBita.ticketsupport.enums.TicketStatus;
+import com.codewithBita.ticketsupport.exception.ResourceNotFoundException;
 import com.codewithBita.ticketsupport.mapper.TicketSupportMapper;
 import com.codewithBita.ticketsupport.model.TicketSupportModel;
 import com.codewithBita.ticketsupport.repository.TicketSupportRepository;
-//import com.codewithBita.ticketsupport.validator.TicketSupportValidator;
+import com.codewithBita.ticketsupport.validator.TicketSupportValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,13 +20,13 @@ public class TicketSupportService {
 
     private final TicketSupportRepository ticketSupportRepository;
     private final TicketSupportMapper ticketSupportMapper;
-//    private final TicketSupportValidator ticketSupportValidator;
+    private final TicketSupportValidator ticketSupportValidator;
 
 
     @Transactional(rollbackFor = Exception.class)
     public TicketSupportModel create(TicketSupportModel model) {
 
-//        ticketSupportValidator.validate(model);
+        ticketSupportValidator.validate(model);
         TicketSupportEntity entity = ticketSupportMapper.modelToEntity(model);
         ticketSupportRepository.save(entity);
         return ticketSupportMapper.entityToModel(entity);
@@ -34,7 +35,11 @@ public class TicketSupportService {
 
     @Transactional(readOnly = true)
     public TicketSupportModel getById(Long id) {
-        return ticketSupportMapper.entityToModel(ticketSupportRepository.getById(id));
+        TicketSupportEntity entity = ticketSupportRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Ticket not found with id: " + id)
+                );
+        return ticketSupportMapper.entityToModel(entity);
     }
 
     @Transactional(readOnly = true)
@@ -45,7 +50,9 @@ public class TicketSupportService {
 
     @Transactional(rollbackFor = Exception.class)
     public void updateTicketStatus(Long id , TicketStatus status) {
-        TicketSupportEntity entity = ticketSupportRepository.findById(id).orElseThrow();
+        TicketSupportEntity entity = ticketSupportRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Ticket not found with id: " + id)
+        );
         if (status != null)
             entity.setStatus(status);
     }
