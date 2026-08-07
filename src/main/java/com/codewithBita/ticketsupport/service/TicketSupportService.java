@@ -1,5 +1,6 @@
 package com.codewithBita.ticketsupport.service;
 
+import com.codewithBita.ticketsupport.aop.LogExecutionTime;
 import com.codewithBita.ticketsupport.entity.TicketSupportEntity;
 import com.codewithBita.ticketsupport.enums.TicketStatus;
 import com.codewithBita.ticketsupport.exception.ResourceNotFoundException;
@@ -24,6 +25,7 @@ public class TicketSupportService {
 
 
     @Transactional(rollbackFor = Exception.class)
+    @LogExecutionTime
     public TicketSupportModel create(TicketSupportModel model) {
 
         ticketSupportValidator.validate(model);
@@ -34,6 +36,7 @@ public class TicketSupportService {
     }
 
     @Transactional(readOnly = true)
+    @LogExecutionTime
     public TicketSupportModel getById(Long id) {
         TicketSupportEntity entity = ticketSupportRepository.findById(id)
                 .orElseThrow(() ->
@@ -43,12 +46,14 @@ public class TicketSupportService {
     }
 
     @Transactional(readOnly = true)
+    @LogExecutionTime
     public Page<TicketSupportModel> getListOfTickets(Pageable pageable) {
         Page<TicketSupportEntity> entities = ticketSupportRepository.findAll(pageable);
         return entities.map(ticketSupportMapper::entityToModel);
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @LogExecutionTime
     public void updateTicketStatus(Long id , TicketStatus status) {
         TicketSupportEntity entity = ticketSupportRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Ticket not found with id: " + id)
